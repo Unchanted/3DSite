@@ -37,8 +37,8 @@ export default function App() {
         <Suspense fallback={null}>
 
           <group position={[0, -1, 0]}>
-            <Astro rotation={[0, Math.PI - 0.4, 0]} position={[width/1000, 0, 0.6]} scale={[width < 640 ? width/2200 : 0.30, width < 640 ? width/2200 : 0.30, width < 640 ? width/2200 : 0.30]} />
-            <VideoText position={[0,width < 640 ? 1.5: 0.5, -2]} />
+            <Astro rotation={[0, Math.PI + Math.PI, 0]} position={[width/1000, 0, -1]} scale={[width < 640 ? width/2200 : 0.30, width < 640 ? width/2200 : 0.30, width < 640 ? width/2200 : 0.30]} />
+            <VideoText primaryText="Arcade" secondaryText="Build Ideas...." position={[0, width < 640 ? 1.5 : 0.5, -2]} />
             <Ground />
           </group>
           <spotLight position={[0, 10, 0]} intensity={0.5} />
@@ -56,29 +56,53 @@ function Astro(props) {
   return <primitive object={scene} {...props} />
 }
 
-function VideoText(props) {
+function VideoText({ primaryText, secondaryText, position, ...props }) {
   const { width } = useWindowDimensions();
 
-  const [video] = useState(() => Object.assign(document.createElement('video'), { src: '/spaceEdit2.mp4', crossOrigin: 'Anonymous', loop: true, muted: true }))
-  video.setAttribute('playsinline', true)
-  useEffect(() => void video.play(), [video])
+  const [video] = useState(() =>
+    Object.assign(document.createElement('video'), {
+      src: '/spaceEdit2.mp4',
+      crossOrigin: 'Anonymous',
+      loop: true,
+      muted: true,
+    })
+  );
+
+  video.setAttribute('playsinline', true);
+  useEffect(() => void video.play(), [video]);
+
   return (
     <>
-    <Text font="/Inter-Bold.woff" fontSize={width < 640 ? width/900 : width/1200} letterSpacing={0} textAlign='center' {...props}>
-      Arcade
-      <meshBasicMaterial toneMapped={false}>
-        <videoTexture attach="map" args={[video]} />
-      </meshBasicMaterial>
-    </Text>
-    <Text font="/Inter-Bold.woff" fontSize={width < 640 ? width/1600 : width/2900} letterSpacing={-0.06} textAlign='center' {...props}>
-        Build Ideas....
-    <meshBasicMaterial toneMapped={false}>
-      <videoTexture attach="map" args={[video]} />
-    </meshBasicMaterial>
-  </Text>
-  </>
-  )
+      <Text
+        font="/Inter-Bold.woff"
+        fontSize={width < 640 ? width / 900 : width / 1200}
+        letterSpacing={0}
+        textAlign="center"
+        position={[position[0], position[1] + 1, position[2]]} // Adjusted Y position
+        {...props}
+      >
+        {primaryText}
+        <meshBasicMaterial toneMapped={false}>
+          <videoTexture attach="map" args={[video]} />
+        </meshBasicMaterial>
+      </Text>
+      <Text
+        font="/Inter-Bold.woff"
+        fontSize={width < 640 ? width / 1600 : width / 2900}
+        letterSpacing={-0.06}
+        textAlign="center"
+        position={[position[0], position[1] - 0.01, position[2]]} // Adjusted Y position
+        {...props}
+      >
+        {secondaryText}
+        <meshBasicMaterial toneMapped={false}>
+          <videoTexture attach="map" args={[video]} />
+        </meshBasicMaterial>
+      </Text>
+    </>
+  );
 }
+
 
 function Ground() {
   const [floor, normal] = useTexture(['/SurfaceImperfections003_1K_var1.jpg', '/SurfaceImperfections003_1K_Normal.jpg'])
