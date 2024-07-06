@@ -3,7 +3,31 @@ import React, { Suspense, useEffect, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Reflector, Text, useTexture, useGLTF, Stars} from '@react-three/drei'
 
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height
+  };
+}
+
+function useWindowDimensions() {
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowDimensions(getWindowDimensions());
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowDimensions;
+}
+
 export default function App() {
+  const { width } = useWindowDimensions();
 
   return (
     <div className='w-full h-dvh z-0 relative'>
@@ -13,7 +37,8 @@ export default function App() {
         <Suspense fallback={null}>
 
           <group position={[0, -1, 0]}>
-            <StaticText position={[0,0.5, -2]} />
+            <Astro rotation={[0, Math.PI - 0.4, 0]} position={[width/1000, 0, 0.6]} scale={[width < 640 ? width/2200 : 0.30, width < 640 ? width/2200 : 0.30, width < 640 ? width/2200 : 0.30]} />
+            <VideoText position={[0,width < 640 ? 1.5: 0.5, -2]} />
             <Ground />
           </group>
           <spotLight position={[0, 10, 0]} intensity={0.5} />
@@ -26,17 +51,29 @@ export default function App() {
   )
 }
 
-function StaticText(props) {
+function Astro(props) {
+  const { scene } = useGLTF('/astronotSmallGrayFinal.glb')
+  return <primitive object={scene} {...props} />
+}
+
+function VideoText(props) {
+  const { width } = useWindowDimensions();
+
+  const [video] = useState(() => Object.assign(document.createElement('video'), { src: '/spaceEdit2.mp4', crossOrigin: 'Anonymous', loop: true, muted: true }))
+  video.setAttribute('playsinline', true)
+  useEffect(() => void video.play(), [video])
   return (
     <>
-    <Text font="/Inter-Bold.woff" fontSize={2} letterSpacing={0} textAlign='center' {...props}>
-      Big Text{"\n"}
+    <Text font="/Inter-Bold.woff" fontSize={width < 640 ? width/900 : width/1200} letterSpacing={0} textAlign='center' {...props}>
+      Arcade
       <meshBasicMaterial toneMapped={false}>
+        <videoTexture attach="map" args={[video]} />
       </meshBasicMaterial>
     </Text>
-    <Text font="/Inter-Bold.woff" fontSize={1} letterSpacing={-0.06} textAlign='center' {...props}>
-        Small Text
+    <Text font="/Inter-Bold.woff" fontSize={width < 640 ? width/1600 : width/2900} letterSpacing={-0.06} textAlign='center' {...props}>
+        Build Ideas....
     <meshBasicMaterial toneMapped={false}>
+      <videoTexture attach="map" args={[video]} />
     </meshBasicMaterial>
   </Text>
   </>
