@@ -1,63 +1,45 @@
-import React, { useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 
-const ASCIIDoughnut = ({ position = { x: 0, y: 0 }, size = { width: window.innerWidth, height: window.innerHeight } }) => {
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const { width, height } = size;
-    canvas.width = width;
-    canvas.height = height;
-    canvas.style.position = 'absolute';
-    canvas.style.left = `${position.x}px`;
-    canvas.style.top = `${position.y}px`;
-    document.body.appendChild(canvas);
+function Doughnut({ position = [0, 0, -5], size = 1 }) {
+  const doughnutRef = useRef();
+  const particlesRef = useRef();
 
-    const R1 = 1;
-    const R2 = 2;
-    const K1 = 150;
-    const K2 = 5;
-    let A = 1;
-    let B = 1;
+  // Rotate the doughnut
+  useFrame((state, delta) => {
+    doughnutRef.current.rotation.x += delta * 0.1;
+    doughnutRef.current.rotation.y += delta * 0.1;
+    particlesRef.current.rotation.y += delta * 0.05;
+  });
 
-    const renderFrame = () => {
-      context.clearRect(0, 0, width, height);
+  // Create particles
+  const particles = useMemo(() => {
+    const count = 1000;
+    const temp = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
 
-      for (let j = 0; j < Math.PI * 2; j += 0.07) {
-        for (let i = 0; i < Math.PI * 2; i += 0.02) {
-          const c = Math.sin(i);
-          const d = Math.cos(j);
-          const e = Math.sin(A);
-          const f = Math.sin(j);
-          const g = Math.cos(A);
-          const h = d + R2;
-          const D = 1 / (c * h * e + f * g + R1);
-          const l = Math.cos(i);
-          const m = Math.cos(B);
-          const n = Math.sin(B);
-          const t = c * h * g - f * e;
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
 
-          const x = width / 2 + K1 * D * (l * h * m - t * n);
-          const y = height / 2 - K2 * D * (l * h * n + t * m);
-          const z = K1 * D;
+    temp.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return temp;
+  }, []);
 
-          context.fillStyle = `rgba(${z * 255}, ${z * 255}, ${z * 255}, 1)`;
-          context.fillRect(x, y, 2, 2);
-        }
-      }
+  return (
+    <group>
+      <mesh ref={doughnutRef} position={position} scale={[size, size, size]}>
+        <torusGeometry args={[2, 0.5, 16, 100]} />
+        <meshStandardMaterial color="orange" />
+      </mesh>
+      <points ref={particlesRef} geometry={particles}>
+        <pointsMaterial color="#ffffff" size={0.05} sizeAttenuation />
+      </points>
+    </group>
+  );
+}
 
-      A += 0.07;
-      B += 0.03;
-      requestAnimationFrame(renderFrame);
-    };
-
-    renderFrame();
-
-    return () => {
-      document.body.removeChild(canvas);
-    };
-  }, [position, size]);
-
-  return null;
-};
-
-export default ASCIIDoughnut;
+export default Doughnut;
