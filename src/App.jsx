@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import React, { Suspense, useEffect, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Reflector, Text, useTexture, useGLTF, Stars } from '@react-three/drei'
-import ASCIIDoughnut from './ASCIIDoughnut';
+import ASCIIDoughnut from './components/doughnut.jsx';
 
 function getWindowDimensions() {
   const { innerWidth: width, innerHeight: height } = window;
@@ -47,15 +47,9 @@ export default function App() {
           <directionalLight position={[+10, 0, 1]} intensity={2} />
           <Stars radius={100} depth={5} count={5000} factor={30} saturation={5} fade speed={1} />
           <Intro />
+          <ASCIIDoughnut position={[0, 0, 0 ]} />
         </Suspense>
       </Canvas>
-      <button
-        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-500 text-white rounded-lg"
-        onClick={handleButtonClick}
-      >
-        Toggle Doughnut
-      </button>
-      {showDoughnut && <ASCIIDoughnut />}
     </div>
   );
 }
@@ -121,32 +115,11 @@ function Ground() {
   );
 }
 
+
 function Intro() {
-  const [vec] = useState(() => new THREE.Vector3());
-  const [orientation, setOrientation] = useState({ beta: 0, gamma: 0 });
-
-  useEffect(() => {
-    function handleOrientation(event) {
-      setOrientation({
-        beta: event.beta,
-        gamma: event.gamma,
-      });
-    }
-
-    window.addEventListener('deviceorientation', handleOrientation, true);
-    return () => window.removeEventListener('deviceorientation', handleOrientation);
-  }, []);
-
+  const [vec] = useState(() => new THREE.Vector3())
   return useFrame((state) => {
-    // Convert orientation angles to camera position
-    const beta = THREE.Math.degToRad(orientation.beta); // X-axis
-    const gamma = THREE.Math.degToRad(orientation.gamma); // Y-axis
-
-    const x = Math.sin(gamma) * 5;
-    const y = 3 + Math.sin(beta) * 2;
-    const z = 14;
-
-    state.camera.position.lerp(vec.set(x, y, z), 0.05);
-    state.camera.lookAt(0, 0, 0);
-  });
+    state.camera.position.lerp(vec.set(state.mouse.x * 5, 3 + state.mouse.y * 2, 14), 0.05)
+    state.camera.lookAt(0, 0, 0)
+  })
 }
