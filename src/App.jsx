@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import React, { Suspense, useEffect, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Reflector, Text, useTexture, useGLTF, Stars } from '@react-three/drei'
-import ASCIIDoughnut from './components/doughnut.jsx';
+import { useSpring, animated } from '@react-spring/three'
 
 function getWindowDimensions() {
   const { innerWidth: width, innerHeight: height } = window;
@@ -26,15 +26,26 @@ function useWindowDimensions() {
 
 export default function App() {
   const { width } = useWindowDimensions();
-  const [showDoughnut, setShowDoughnut] = useState(false);
+  const [isZoomedOut, setIsZoomedOut] = useState(false);
+  const [cameraPosition] = useState([0, 6, 100]);
+
+  const cameraAnimation = useSpring({
+    position: isZoomedOut ? [0, 20, 200] : cameraPosition,
+    config: { mass: 1, tension: 280, friction: 60 }
+  });
 
   const handleButtonClick = () => {
-    setShowDoughnut(!showDoughnut);
+    setIsZoomedOut(!isZoomedOut);
   };
 
   return (
     <div className='w-full h-dvh z-0 relative'>
-      <Canvas id="canvas" concurrent gl={{ alpha: false }} pixelRatio={[1, 1.5]} camera={{ position: [0, 6, 100], fov: 15 }} dpr={[1, 2]}>
+      <Canvas id="canvas" concurrent gl={{ alpha: false }} pixelRatio={[1, 1.5]} dpr={[1, 2]}>
+        <animated.perspectiveCamera 
+          {...cameraAnimation} 
+          fov={15}
+          makeDefault
+        />
         <color attach="background" args={['black']} />
         <fog attach="fog" args={['black', 15, 20]} />
         <Suspense fallback={null}>
@@ -47,9 +58,14 @@ export default function App() {
           <directionalLight position={[+10, 0, 1]} intensity={2} />
           <Stars radius={100} depth={5} count={5000} factor={30} saturation={5} fade speed={1} />
           <Intro />
-          <ASCIIDoughnut position={[0, 0, 0 ]} />
         </Suspense>
       </Canvas>
+      <button
+        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-500 text-white rounded-lg"
+        onClick={handleButtonClick}
+      >
+        {isZoomedOut ? "Warp Back!" : "Warp!!"}
+      </button>
     </div>
   );
 }
@@ -114,7 +130,6 @@ function Ground() {
     </Reflector>
   );
 }
-
 
 function Intro() {
   const [vec] = useState(() => new THREE.Vector3())
